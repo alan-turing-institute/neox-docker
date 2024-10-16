@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: David Llewellyn-Jones <dllewellyn-jones@turing.ac.uk>
+Date: Wed, 16 Oct 2024 16:30:43 +0100
+Subject: [PATCH] Set version to 0.4.2
+
+We need version 0.4.2, but this isn't tagged in the source tree, so this
+hacks the version number so that we look like version 0.4.2, even though
+this is actually tagged as version 0.4.
+
+This is needed to allow the code to work with gpt-neox and the
+nvcr.io/nvidia/pytorch:22.12-py3 image on Isambard-AI.
+---
+ python/setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/setup.py b/python/setup.py
+index 432484cc1..7f2b5651f 100644
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -90,7 +90,7 @@ class CMakeBuild(build_ext):
+ 
+ setup(
+     name="triton",
+-    version="0.4.0",
++    version="0.4.2",
+     author="Philippe Tillet",
+     author_email="phil@openai.com",
+     description="A language and compiler for custom Deep Learning operations",
