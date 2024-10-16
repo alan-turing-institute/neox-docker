@@ -78,8 +78,8 @@ $ git submodule update --init
 
 ## Patch generation
 
-If you want to update the patches with new content, the process is to first apply the existing patches, then to make your changes, then to generate the patches.
-After that you should be safe to rest the submodules to their original state (because you can then re-apply your patches if you want to).
+If you want to update the patches with new content, the process is to first apply the existing patches, then to make your changes, then to generate the previous patches again alongside your new patches.
+Once you've generated your patches it should be safe to reset the submodules to their original state, because you can then re-apply your patches if you want to.
 
 To demonstrate how this is done we'll use gpt-neox as an example, but the same process applies for triton as well.
 
