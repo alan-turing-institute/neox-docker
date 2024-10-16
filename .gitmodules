@@ -1,0 +1,6 @@
+[submodule "gpt-neox"]
+	path = gpt-neox
+	url = https://github.com/EleutherAI/gpt-neox.git
+[submodule "triton"]
+	path = triton
+	url = https://github.com/triton-lang/triton.git
