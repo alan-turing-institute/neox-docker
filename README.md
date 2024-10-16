@@ -16,7 +16,7 @@ To build the image locally, you'll need to cross-build it for ARM.
 The following should work (you'll probably want to change the tag):
 
 ```
-$ git clone https://github.com/llewelld/neox-docker.git
+$ git clone https://github.com/llewelld/neox-docker.git --recurse-submodules
 $ cd neox-docker
 $ docker buildx build -t llewelld/isambard-ai-neogx:v1.3 --platform linux/arm64 .
 ```
@@ -24,7 +24,7 @@ $ docker buildx build -t llewelld/isambard-ai-neogx:v1.3 --platform linux/arm64 
 To build it on Isambard-AI is similar, but no cross-compilation is needed and you should use `podman-hpc` rather than `docker`.
 The following should work:
 ```
-$ git clone https://github.com/llewelld/neox-docker.git
+$ git clone https://github.com/llewelld/neox-docker.git --recurse-submodules
 $ cd neox-docker
 $ podman-hpc build -t llewelld/isambard-ai-neogx:v1.3 .
 ```
