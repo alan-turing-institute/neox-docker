@@ -17,8 +17,6 @@ RUN cd neox-docker/triton && \
 RUN cd neox-docker/gpt-neox && \
     git apply ../patches/gpt-neox/*.patch
 
-
-
 # Build a version of Triton we can use
 RUN cd neox-docker/triton/python && \
     python3 setup.py bdist_wheel && \
