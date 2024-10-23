@@ -69,6 +69,7 @@ RUN sed -i \
 
 # Set up execution environment
 ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
+ENV OMP_NUM_THREADS=1
 
 # Clear staging
 RUN mkdir -p /tmp && chmod 0777 /tmp
