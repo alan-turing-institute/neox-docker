@@ -11,11 +11,11 @@ RUN apt update && \
 # Download the repositories needed
 RUN git clone https://github.com/llewelld/neox-docker.git --recurse-submodules -j8 --depth 1
 
-# Apply the patches to the submodules
+# Apply the patches to the submodules (applying only the single-node patch for gpt-neox)
 RUN cd neox-docker/triton && \
     git apply ../patches/triton/*.patch
 RUN cd neox-docker/gpt-neox && \
-    git apply ../patches/gpt-neox/*.patch
+    git apply ../patches/gpt-neox/0001-fixes-to-v1-tag-for-baskerville-single-node-launchin.patch
 
 # Build a version of Triton we can use
 RUN cd neox-docker/triton/python && \
@@ -61,7 +61,7 @@ RUN pip install --no-cache-dir -v --disable-pip-version-check \
 RUN python3 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl && \
     rm fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl
 
-# Patch Deepspeed for MPI
+# Patch Deepspeed for single-node MPI launching
 RUN sed -i \
         -e s/\'-hostfile\',/\#\'-hostfile\',/ \
         -e s/f\'\{self\.args\.hostfile\}\',/\#f\'\{self\.args\.hostfile\}\',/ \

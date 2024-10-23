@@ -1,0 +1,149 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ed Chapman <idyn7568@bask-pg-login02.cluster.baskerville.ac.uk>
+Date: Wed, 14 Aug 2024 10:31:00 +0100
+Subject: [PATCH] fixes to v1 tag for baskerville, single node launching
+
+Small changes to the build configuration to allow the code to run using
+the nvcr.io/nvidia/pytorch:22.12-py3 image on Isambard-AI.
+---
+ README.md                                |  2 ++
+ megatron/model/transformer.py            |  2 +-
+ megatron/neox_arguments/arguments.py     | 10 +++++-----
+ requirements/requirements-onebitadam.txt |  2 +-
+ requirements/requirements.txt            |  6 ++++--
+ tools/convert_to_hf.py                   |  4 ++--
+ 6 files changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/README.md b/README.md
+index 08f92d41..c9caeeb5 100644
+--- a/README.md
++++ b/README.md
+@@ -3,6 +3,8 @@
+ 
+ # GPT-NeoX
+ 
++Hello!
++
+ This repository records [EleutherAI](https://www.eleuther.ai)'s library for training large-scale language models on GPUs. Our current framework is based on NVIDIA's [Megatron Language Model](https://github.com/NVIDIA/Megatron-LM) and has been augmented with techniques from [DeepSpeed](https://www.deepspeed.ai) as well as some novel optimizations. We aim to make this repo a centralized and accessible place to gather techniques for training large-scale autoregressive language models, and accelerate research into large-scale training.
+ 
+ For those looking for a TPU-centric codebase, we recommend [Mesh Transformer JAX](https://github.com/kingoflolz/mesh-transformer-jax).
+diff --git a/megatron/model/transformer.py b/megatron/model/transformer.py
+index d1be347f..019404c8 100644
+--- a/megatron/model/transformer.py
++++ b/megatron/model/transformer.py
+@@ -429,7 +429,7 @@ class ParallelSelfAttention(nn.Module):
+         )
+ 
+         # Combined q/k/v into [b * s, 3, np, hn].
+-        qkv = torch.concat([query_layer, key_layer, value_layer], dim=1)
++        qkv = torch.cat([query_layer, key_layer, value_layer], dim=1)
+ 
+         batch_size = output_size[0]
+         seqlen = output_size[2]
+diff --git a/megatron/neox_arguments/arguments.py b/megatron/neox_arguments/arguments.py
+index 4ab9a63e..15302308 100644
+--- a/megatron/neox_arguments/arguments.py
++++ b/megatron/neox_arguments/arguments.py
+@@ -169,7 +169,6 @@ class NeoXArgs(*BASE_CLASSES):
+         config_files = dict()
+         # iterate of all to be loaded yaml files
+         for conf_file_name in paths_to_yml_files:
+-
+             # load file
+             with open(conf_file_name) as conf_file:
+                 conf = yaml.load(conf_file, Loader=yaml.FullLoader)
+@@ -395,7 +394,6 @@ class NeoXArgs(*BASE_CLASSES):
+         return [f"--{k}", str(v)]
+ 
+     def get_deepspeed_main_args(self):
+-
+         args_list = list()
+ 
+         # get deepspeed runner args, and only pass them in to deepspeed launcher if they differ from defaults
+@@ -406,6 +404,11 @@ class NeoXArgs(*BASE_CLASSES):
+                     self.convert_key_value_to_command_line_arg(key, configured_value)
+                 )
+ 
++        # Ed: Include this arg for single node slurm or mpi launching **only**
++        args_list.extend(
++            self.convert_key_value_to_command_line_arg("force_multi", True)
++        )
++
+         if "DLTS_HOSTFILE" in os.environ:
+             args_list.extend(
+                 self.convert_key_value_to_command_line_arg(
+@@ -629,7 +632,6 @@ class NeoXArgs(*BASE_CLASSES):
+ 
+     @staticmethod
+     def check_batch_parameters(dp_world_size, train_batch, micro_batch, grad_acc):
+-
+         assert (
+             train_batch > 0
+         ), f"Train batch size: {train_batch} has to be greater than 0"
+@@ -962,7 +964,6 @@ class NeoXArgs(*BASE_CLASSES):
+ 
+         # Parameters sharing does not work with torch DDP.
+         if (self.num_unique_layers is not None) and (self.num_layers is not None):
+-
+             if not (self.num_unique_layers <= self.num_layers):
+                 error_message = (
+                     self.__class__.__name__
+@@ -1036,7 +1037,6 @@ class NeoXArgs(*BASE_CLASSES):
+         At runtime, checks types are actually the type specified.
+         """
+         for field_name, field_def in self.__dataclass_fields__.items():
+-
+             actual_value = getattr(self, field_name)
+             if actual_value is None:
+                 continue  # we allow for some values not to be configured
+diff --git a/requirements/requirements-onebitadam.txt b/requirements/requirements-onebitadam.txt
+index a6dd402b..20feb590 100644
+--- a/requirements/requirements-onebitadam.txt
++++ b/requirements/requirements-onebitadam.txt
+@@ -1 +1 @@
+-cupy-cuda111==8.6.0
++cupy-cuda11x==12.3.0
+diff --git a/requirements/requirements.txt b/requirements/requirements.txt
+index 6d30d1a5..a1c66c64 100644
+--- a/requirements/requirements.txt
++++ b/requirements/requirements.txt
+@@ -4,13 +4,15 @@ ftfy==6.0.1
+ git+https://github.com/EleutherAI/lm_dataformat.git@4eec05349977071bf67fc072290b95e31c8dd836
+ huggingface_hub==0.11.0
+ lm_eval==0.3.0
+-mpi4py==3.0.3
++mpi4py==3.1.3
+ numpy==1.22.0
+ pybind11==2.6.2
+ regex
+ sentencepiece
+ six
+-tiktoken==0.1.2
++tiktoken==0.4.0
+ tokenizers==0.12.1
+ transformers~=4.24.0
+ wandb==0.10.28
++best-download==0.1.2
++protobuf==3.20.1
+diff --git a/tools/convert_to_hf.py b/tools/convert_to_hf.py
+index bf989abd..de333345 100644
+--- a/tools/convert_to_hf.py
++++ b/tools/convert_to_hf.py
+@@ -18,7 +18,7 @@ import sys
+ import yaml
+ import argparse
+ from tqdm import tqdm
+-
++from typing import List
+ import torch
+ from transformers import GPTNeoXConfig, GPTNeoXForCausalLM
+ 
+@@ -41,7 +41,7 @@ Please investigate carefully whether your model is compatible with all architect
+ 
+ def load_partitions(
+     input_checkpoint_path, mp_partitions, layer_idx
+-) -> list[torch.Tensor]:
++) -> List[torch.Tensor]:
+     """Returns a list containing all weights in a given layer from a model (across MP partitions)"""
+ 
+     loaded_tp_ranks = [

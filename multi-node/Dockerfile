@@ -61,12 +61,6 @@ RUN pip install --no-cache-dir -v --disable-pip-version-check \
 RUN python3 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl && \
     rm fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl
 
-# Patch Deepspeed for MPI
-RUN sed -i \
-        -e s/\'-hostfile\',/\#\'-hostfile\',/ \
-        -e s/f\'\{self\.args\.hostfile\}\',/\#f\'\{self\.args\.hostfile\}\',/ \
-        /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
-
 # Set up execution environment
 ENV PATH="${PATH}:/opt/hpcx/ompi/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/hpcx/ompi/lib"
