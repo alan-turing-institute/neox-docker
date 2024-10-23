@@ -68,11 +68,7 @@ RUN sed -i \
         /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
 
 # Set up execution environment
-ENV PATH="${PATH}:/opt/hpcx/ompi/bin"
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/hpcx/ompi/lib"
-ENV OPAL_PREFIX=/opt/hpcx/ompi
-ENV OMPI_ALLOW_RUN_AS_ROOT=1
-ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 
 # Clear staging
 RUN mkdir -p /tmp && chmod 0777 /tmp
