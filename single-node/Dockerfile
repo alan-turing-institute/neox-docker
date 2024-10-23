@@ -9,7 +9,7 @@ RUN apt update && \
     python3 -m pip install --upgrade build ninja cmake wheel pybind11
 
 # Download the repositories needed
-RUN git clone https://github.com/llewelld/neox-docker.git --recurse-submodules -j8 --depth 1
+RUN git clone https://github.com/alan-turing-institute/neox-docker.git --recurse-submodules -j8 --depth 1
 
 # Apply the patches to the submodules (applying only the single-node patch for gpt-neox)
 RUN cd neox-docker/triton && \
