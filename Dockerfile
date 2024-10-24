@@ -2,6 +2,15 @@
 # Initial image is just for building things
 
 FROM nvcr.io/nvidia/pytorch:22.12-py3 AS build
+ARG mpi_type
+ARG feature_branch="main"
+
+# Check arguments
+RUN if [[ "${mpi_type}" != "single" ]] && [[ "${mpi_type}" != "multi" ]]; then \
+        echo -e "\n\033[0;31mPlease add either \"--build-arg mpi_type=single\" or \"--build-arg mpi_type=multi\" to your podman-hpc build command\033[0m\n" && exit 1; \
+    else \
+        echo "MPI Type: ${mpi_type}"; \
+    fi
 
 # Install build dependencies
 RUN apt update && \
@@ -9,13 +18,17 @@ RUN apt update && \
     python3 -m pip install --upgrade build ninja cmake wheel pybind11
 
 # Download the repositories needed
-RUN git clone -b single-or-multi https://github.com/alan-turing-institute/neox-docker.git --recurse-submodules -j8 --depth 1
+RUN git clone -b ${feature_branch} https://github.com/alan-turing-institute/neox-docker.git --recurse-submodules -j8 --depth 1
 
-# Apply the patches to the submodules (applying only the single-node patch for gpt-neox)
+# Apply the patches to the submodules
 RUN cd neox-docker/triton && \
     git apply ../patches/triton/*.patch
 RUN cd neox-docker/gpt-neox && \
-    git apply ../patches/gpt-neox/0001-fixes-to-v1-tag-for-baskerville-single-node-launchin.patch
+    if [ "${mpi_type}" == "single" ]; then \
+        git apply ../patches/gpt-neox/0001-*.patch; \
+    elif [ "${mpi_type}" == "multi" ]; then \
+        git apply ../patches/gpt-neox/*.patch; \
+    fi
 
 # Build a version of Triton we can use
 RUN cd neox-docker/triton/python && \
