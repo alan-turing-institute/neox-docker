@@ -8,11 +8,11 @@ the nvcr.io/nvidia/pytorch:22.12-py3 image on Isambard-AI.
 ---
  README.md                                |  2 ++
  megatron/model/transformer.py            |  2 +-
- megatron/neox_arguments/arguments.py     | 10 +++++-----
+ megatron/neox_arguments/arguments.py     | 15 ++++++++++-----
  requirements/requirements-onebitadam.txt |  2 +-
  requirements/requirements.txt            |  6 ++++--
  tools/convert_to_hf.py                   |  4 ++--
- 6 files changed, 15 insertions(+), 11 deletions(-)
+ 6 files changed, 20 insertions(+), 11 deletions(-)
 
 diff --git a/README.md b/README.md
 index 08f92d41..c9caeeb5 100644
@@ -41,7 +41,7 @@ index d1be347f..019404c8 100644
          batch_size = output_size[0]
          seqlen = output_size[2]
 diff --git a/megatron/neox_arguments/arguments.py b/megatron/neox_arguments/arguments.py
-index 4ab9a63e..15302308 100644
+index 4ab9a63e..b8fc20f9 100644
 --- a/megatron/neox_arguments/arguments.py
 +++ b/megatron/neox_arguments/arguments.py
 @@ -169,7 +169,6 @@ class NeoXArgs(*BASE_CLASSES):
@@ -60,7 +60,7 @@ index 4ab9a63e..15302308 100644
          args_list = list()
  
          # get deepspeed runner args, and only pass them in to deepspeed launcher if they differ from defaults
-@@ -406,6 +404,11 @@ class NeoXArgs(*BASE_CLASSES):
+@@ -406,6 +404,16 @@ class NeoXArgs(*BASE_CLASSES):
                      self.convert_key_value_to_command_line_arg(key, configured_value)
                  )
  
@@ -69,10 +69,15 @@ index 4ab9a63e..15302308 100644
 +            self.convert_key_value_to_command_line_arg("force_multi", True)
 +        )
 +
++        # Ed: Include for single and multi-node launching
++        args_list.extend(
++            self.convert_key_value_to_command_line_arg("no_ssh_check", True)
++        )
++
          if "DLTS_HOSTFILE" in os.environ:
              args_list.extend(
                  self.convert_key_value_to_command_line_arg(
-@@ -629,7 +632,6 @@ class NeoXArgs(*BASE_CLASSES):
+@@ -629,7 +637,6 @@ class NeoXArgs(*BASE_CLASSES):
  
      @staticmethod
      def check_batch_parameters(dp_world_size, train_batch, micro_batch, grad_acc):
@@ -80,7 +85,7 @@ index 4ab9a63e..15302308 100644
          assert (
              train_batch > 0
          ), f"Train batch size: {train_batch} has to be greater than 0"
-@@ -962,7 +964,6 @@ class NeoXArgs(*BASE_CLASSES):
+@@ -962,7 +969,6 @@ class NeoXArgs(*BASE_CLASSES):
  
          # Parameters sharing does not work with torch DDP.
          if (self.num_unique_layers is not None) and (self.num_layers is not None):
@@ -88,7 +93,7 @@ index 4ab9a63e..15302308 100644
              if not (self.num_unique_layers <= self.num_layers):
                  error_message = (
                      self.__class__.__name__
-@@ -1036,7 +1037,6 @@ class NeoXArgs(*BASE_CLASSES):
+@@ -1036,7 +1042,6 @@ class NeoXArgs(*BASE_CLASSES):
          At runtime, checks types are actually the type specified.
          """
          for field_name, field_def in self.__dataclass_fields__.items():
