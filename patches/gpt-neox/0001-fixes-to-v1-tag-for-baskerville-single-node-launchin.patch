@@ -22,8 +22,6 @@ index 08f92d41..c9caeeb5 100644
  
  # GPT-NeoX
  
-+Hello!
-+
  This repository records [EleutherAI](https://www.eleuther.ai)'s library for training large-scale language models on GPUs. Our current framework is based on NVIDIA's [Megatron Language Model](https://github.com/NVIDIA/Megatron-LM) and has been augmented with techniques from [DeepSpeed](https://www.deepspeed.ai) as well as some novel optimizations. We aim to make this repo a centralized and accessible place to gather techniques for training large-scale autoregressive language models, and accelerate research into large-scale training.
  
  For those looking for a TPU-centric codebase, we recommend [Mesh Transformer JAX](https://github.com/kingoflolz/mesh-transformer-jax).
@@ -67,11 +65,6 @@ index 4ab9a63e..b8fc20f9 100644
 +        # Ed: Include this arg for single node slurm or mpi launching **only**
 +        args_list.extend(
 +            self.convert_key_value_to_command_line_arg("force_multi", True)
-+        )
-+
-+        # Ed: Include for single and multi-node launching
-+        args_list.extend(
-+            self.convert_key_value_to_command_line_arg("no_ssh_check", True)
 +        )
 +
          if "DLTS_HOSTFILE" in os.environ:
