@@ -61,12 +61,6 @@ RUN pip install --no-cache-dir -v --disable-pip-version-check \
 RUN python3 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl && \
     rm fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl
 
-# Patch Deepspeed for single-node MPI launching
-RUN sed -i \
-        -e s/\'-hostfile\',/\#\'-hostfile\',/ \
-        -e s/f\'\{self\.args\.hostfile\}\',/\#f\'\{self\.args\.hostfile\}\',/ \
-        /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
-
 # Set up execution environment
 ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 ENV OMP_NUM_THREADS=1
