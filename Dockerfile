@@ -74,6 +74,13 @@ RUN pip install --no-cache-dir -v --disable-pip-version-check \
 RUN python3 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl && \
     rm fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl
 
+# Patch Deepspeed to remove hardcode mpi run network interface. See this issue: https://github.com/microsoft/DeepSpeed/issues/4460
+RUN sed -i \
+        -e 106s/\"--mca\",/\#\"--mca\",/ \
+        -e s/\"btl_tcp_if_include\",/\#\"btl_tcp_if_include\",/ \
+        -e s/\"eth0\",/\#\"eth0\",/ \
+        /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
+
 # Set up execution environment
 ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 ENV OMP_NUM_THREADS=1
