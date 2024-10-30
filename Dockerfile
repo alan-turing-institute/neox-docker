@@ -40,7 +40,8 @@ RUN cd neox-docker/gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597
@@ -67,7 +68,8 @@ RUN cd /gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597

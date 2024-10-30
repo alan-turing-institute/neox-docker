@@ -6,12 +6,13 @@ Subject: [PATCH] Fix to v1 tag for Isambard-AI, single node launching
 Small changes to the build configuration to allow the code to run using
 the nvcr.io/nvidia/pytorch:22.12-py3 image on Isambard-AI.
 ---
- megatron/model/transformer.py            |  2 +-
- megatron/neox_arguments/arguments.py     | 10 +++++-----
- requirements/requirements-onebitadam.txt |  2 +-
- requirements/requirements.txt            |  6 ++++--
- tools/convert_to_hf.py                   |  4 ++--
- 5 files changed, 13 insertions(+), 11 deletions(-)
+ megatron/model/transformer.py                |  2 +-
+ megatron/neox_arguments/arguments.py         | 10 +++++-----
+ requirements/requirements-flashattention.txt |  2 +-
+ requirements/requirements-onebitadam.txt     |  2 +-
+ requirements/requirements.txt                |  6 ++++--
+ tools/convert_to_hf.py                       |  4 ++--
+ 6 files changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/megatron/model/transformer.py b/megatron/model/transformer.py
 index d1be347f..019404c8 100644
@@ -82,6 +83,13 @@ index 4ab9a63e..15302308 100644
              actual_value = getattr(self, field_name)
              if actual_value is None:
                  continue  # we allow for some values not to be configured
+diff --git a/requirements/requirements-flashattention.txt b/requirements/requirements-flashattention.txt
+index 0c7d41e5..74186992 100644
+--- a/requirements/requirements-flashattention.txt
++++ b/requirements/requirements-flashattention.txt
+@@ -1 +1 @@
+-flash-attn==0.2.2
++flash-attn==1.0.1
 diff --git a/requirements/requirements-onebitadam.txt b/requirements/requirements-onebitadam.txt
 index a6dd402b..20feb590 100644
 --- a/requirements/requirements-onebitadam.txt
