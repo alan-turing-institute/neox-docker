@@ -40,7 +40,8 @@ RUN cd neox-docker/gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597
@@ -67,7 +68,8 @@ RUN cd /gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597
@@ -81,10 +83,18 @@ RUN sed -i \
         -e s/\'eth0\',/\#\'eth0\',/ \
         /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
 
+# Create writable cache space for Transformers
+RUN mkdir -p /workspace/cache && \
+    chmod 0777 /workspace/cache
+
+# Ensure we can write to the /gpt-neox directory
+RUN chmod -R 0777 /gpt-neox
+
 # Set up execution environment
 ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 ENV OMP_NUM_THREADS=1
 ENV DLTS_HOSTFILE=/hosts/for_deepspeed.txt
+ENV TRANSFORMERS_CACHE=/workspace/cache
 
 # Clear staging
 RUN mkdir -p /tmp && chmod 0777 /tmp
