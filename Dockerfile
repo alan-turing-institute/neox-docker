@@ -2,6 +2,15 @@
 # Initial image is just for building things
 
 FROM nvcr.io/nvidia/pytorch:22.12-py3 AS build
+ARG mpi_type
+ARG feature_branch="main"
+
+# Check arguments
+RUN if [[ "${mpi_type}" != "single" ]] && [[ "${mpi_type}" != "multi" ]]; then \
+        echo -e "\n\033[0;31mPlease add either \"--build-arg mpi_type=single\" or \"--build-arg mpi_type=multi\" to your podman-hpc build command\033[0m\n" && exit 1; \
+    else \
+        echo "MPI Type: ${mpi_type}"; \
+    fi
 
 # Install build dependencies
 RUN apt update && \
@@ -9,13 +18,17 @@ RUN apt update && \
     python3 -m pip install --upgrade build ninja cmake wheel pybind11
 
 # Download the repositories needed
-RUN git clone https://github.com/llewelld/neox-docker.git --recurse-submodules -j8 --depth 1
+RUN git clone -b ${feature_branch} https://github.com/alan-turing-institute/neox-docker.git --recurse-submodules -j8 --depth 1
 
 # Apply the patches to the submodules
 RUN cd neox-docker/triton && \
     git apply ../patches/triton/*.patch
 RUN cd neox-docker/gpt-neox && \
-    git apply ../patches/gpt-neox/*.patch
+    if [ "${mpi_type}" == "single" ]; then \
+        git apply ../patches/gpt-neox/0001-*.patch; \
+    elif [ "${mpi_type}" == "multi" ]; then \
+        git apply ../patches/gpt-neox/*.patch; \
+    fi
 
 # Build a version of Triton we can use
 RUN cd neox-docker/triton/python && \
@@ -27,7 +40,8 @@ RUN cd neox-docker/gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597
@@ -54,25 +68,33 @@ RUN cd /gpt-neox/requirements && \
     pip install --no-cache-dir \
         -r requirements.txt \
         -r requirements-onebitadam.txt \
-        -r requirements-sparseattention.txt
+        -r requirements-sparseattention.txt \
+        -r requirements-flashattention.txt
 RUN pip install --no-cache-dir -v --disable-pip-version-check \
         --global-option="--cpp_ext" --global-option="--cuda_ext" \
         git+https://github.com/NVIDIA/apex.git@a651e2c24ecf97cbf367fd3f330df36760e1c597
 RUN python3 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl && \
     rm fused_kernels-0.0.1-cp38-cp38-linux_aarch64.whl
 
-# Patch Deepspeed for MPI
+# Patch Deepspeed to remove hardcode mpi run network interface. See this issue: https://github.com/microsoft/DeepSpeed/issues/4460
 RUN sed -i \
-        -e s/\'-hostfile\',/\#\'-hostfile\',/ \
-        -e s/f\'\{self\.args\.hostfile\}\',/\#f\'\{self\.args\.hostfile\}\',/ \
+        -e 106s/\'--mca\',/\#\'--mca\',/ \
+        -e s/\'btl_tcp_if_include\',/\#\'btl_tcp_if_include\',/ \
+        -e s/\'eth0\',/\#\'eth0\',/ \
         /usr/local/lib/python3.8/dist-packages/deepspeed/launcher/multinode_runner.py
 
+# Create writable cache space for Transformers
+RUN mkdir -p /workspace/cache && \
+    chmod 0777 /workspace/cache
+
+# Ensure we can write to the /gpt-neox directory
+RUN chmod -R 0777 /gpt-neox
+
 # Set up execution environment
-ENV PATH="${PATH}:/opt/hpcx/ompi/bin"
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/hpcx/ompi/lib"
-ENV OPAL_PREFIX=/opt/hpcx/ompi
-ENV OMPI_ALLOW_RUN_AS_ROOT=1
-ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
+ENV OMP_NUM_THREADS=1
+ENV DLTS_HOSTFILE=/hosts/for_deepspeed.txt
+ENV TRANSFORMERS_CACHE=/workspace/cache
 
 # Clear staging
 RUN mkdir -p /tmp && chmod 0777 /tmp
